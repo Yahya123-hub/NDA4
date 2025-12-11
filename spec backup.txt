@@ -1,0 +1,215 @@
+import { test, expect } from '@playwright/test';
+import { ExpertSignupPage } from '../../pages/experts/ExpertSignupPage';
+import { ProfileCreationPage } from '../../pages/experts/ProfilePage';
+import { AdminLoginPage } from '../../pages/experts/LoginPage';
+import { EventsPage } from '../../pages/experts/EventsPage';
+import { testData } from '../fixtures/testData';
+import { ConsultationsPage } from '../../pages/experts/ConsultationsPage';
+import { PaymentPage } from '../../pages/experts/PaymentPage';
+import { InboxPage } from '../../pages/experts/InboxPage';
+
+test  ('Test Expert signup', async ({ page }) => {
+  const signupPage = new ExpertSignupPage(page);
+  await signupPage.goto();
+
+  const uniqueEmail = testData.expertSignup.validUser.email.replace(
+    '{timestamp}',
+    Date.now().toString()
+  );
+
+  await signupPage.signup(
+    testData.expertSignup.validUser.firstName,
+    testData.expertSignup.validUser.lastName,
+    uniqueEmail,
+    testData.expertSignup.validUser.phone,
+    testData.expertSignup.validUser.password
+  );
+  await signupPage.assertSignupSuccess();
+});
+
+test.describe('Expert tests', () => {
+  test.beforeEach(async ({ page }) => {
+    const loginPage = new AdminLoginPage(page);
+    await loginPage.goto();
+    await loginPage.login(
+      testData.login.adminEmail,
+      testData.login.adminPassword
+    );
+    await loginPage.expectLoginSuccess();
+  });
+
+  test ('Expert can create profile successfully (if not already created)', async ({ page }) => {
+    const profilePage = new ProfileCreationPage(page);
+
+    const createBtn = page.getByText("Create Your Profile", { exact: true });
+
+    if (await createBtn.isVisible({ timeout: 30000 }).catch(() => false)) {
+      await createBtn.click();
+      await expect(page.getByText("First Name")).toBeVisible();
+
+      testData.profileCreation.basicInfo.firstName = testData.profileCreation.basicInfo.firstName.replace(
+        '{timestamp}',
+        Date.now().toString()
+    );
+
+      await profilePage.uploadPhoto('tests/fixtures/test.jpg');
+      await profilePage.fillBasicInfo(testData.profileCreation.basicInfo);
+      await profilePage.fillProfileDetails(testData.profileCreation.details);
+      await profilePage.toggleAvailability();
+      await profilePage.submitProfile();
+
+      await expect(page.getByText('Expert created successfully')).toBeVisible();
+    } else {
+      test.info().annotations.push({
+        type: 'info',
+        description: 'Profile already exists, skipping creation flow.'
+      });
+      expect(true).toBeTruthy();
+    }
+  });
+
+  test ('Expert can edit profile successfully', async ({ page }) => {
+    const profilePage = new ProfileCreationPage(page);
+
+    await page.getByText("Edit Profile", { exact: true }).click();
+    await expect(page.getByText("First Name")).toBeVisible();
+
+    await profilePage.uploadPhoto('tests/fixtures/test1.jpg');
+    await profilePage.editBasicInfo(testData.profileEdit.basicInfo);
+    await profilePage.editProfileDetails(testData.profileEdit.details);
+    await profilePage.toggleAvailability(); 
+    await profilePage.submitProfile();
+
+    await expect(page.getByText('Expert updated successfully')).toBeVisible();
+    await profilePage.assertEditedProfileDetails(testData.profileEdit.details)
+ 
+  });
+
+  test('create a new event', async ({ page }) => {
+   
+    const eventsPage = new EventsPage(page);
+    testData.events.create.title = testData.events.create.title.replace(
+        '{timestamp}',
+        Date.now().toString()
+    );
+
+    await page.getByText("Events", {exact:true}).first().click()
+    await page.getByText("New Group Coaching", {exact:true}).click()
+    await eventsPage.fillEventForm(testData.events.create);
+    await eventsPage.submitEvent();
+    await expect(page.getByText('Group Coaching added successfully')).toBeVisible();
+    await eventsPage.assertEvent(testData.events.create)
+  }); 
+
+
+ test('edit an existing event', async ({ page }) => {
+  const eventsPage = new EventsPage(page);
+
+  testData.events.edit.title = testData.events.edit.title.replace(
+    '{timestamp}',
+    Date.now().toString()
+  );
+
+  await page.getByText("Events", { exact: true }).first().click();
+  await eventsPage.findevent(testData.events.create.title);
+  await page.getByText('Edit', { exact: true }).click();
+
+  await eventsPage.fillEventForm(testData.events.edit);
+
+  await expect(page.getByRole('button', { name: 'Update Group Coaching' })).toBeEnabled({ timeout: 20_000 }); 
+  await page.getByRole('button', { name: 'Update Group Coaching' }).click();
+
+  await expect(page.getByText('Group Coaching updated successfully')).toBeVisible({ timeout: 20_000 });
+
+  await page.getByText("Events", { exact: true }).first().click();
+  await page.reload();
+
+  await eventsPage.findevent(testData.events.edit.title);
+  await eventsPage.assertEvent(testData.events.edit)
+
+});
+
+  test ('cancel an event', async ({ page }) => {
+   
+    const eventsPage = new EventsPage(page);
+    await eventsPage.cancelEvent(testData.events.cancel.title)
+    
+  }); 
+
+  
+test ('create a new consultation', async ({ page }) => {   
+
+    const consultationsPage = new ConsultationsPage(page);
+
+    testData.consultation.valid.title = testData.consultation.valid.title.replace(
+        '{timestamp}',
+        Date.now().toString()
+      );
+
+      await page.getByText("Consult", {exact:true}).first().click()
+      await page.getByText("New Personal Consultation", {exact:true}).click()
+      await consultationsPage.fillConsultationForm(testData.consultation.valid);
+      await consultationsPage.submitConsultation();
+      await expect(page.getByText('Consultation added successfully')).toBeVisible();
+      await consultationsPage.assertconsultations(testData.consultation.valid)
+      
+  });
+
+test ('edit an existing consultation', async ({ page }) => { 
+  
+  const consultationsPage = new ConsultationsPage(page);
+
+  testData.consultation.edit.title = testData.consultation.edit.title.replace(
+    '{timestamp}',
+    Date.now().toString()
+  );
+
+  await page.getByText("Consult", { exact: true }).first().click();
+
+  await consultationsPage.findconsultation(testData.consultation.valid.title);
+  await page.getByText('Edit', { exact: true }).click();
+
+  await consultationsPage.fillEditConsultationForm(testData.consultation.edit);
+
+  await expect(page.getByRole('button', { name: 'Update Consultation' })).toBeEnabled({ timeout: 20_000 });
+  await page.getByRole('button', { name: 'Update Consultation' }).click();
+
+  await expect(page.getByText('Personal Consultation updated successfully')).toBeVisible({ timeout: 20_000 });
+
+  await page.getByText("Consult", { exact: true }).first().click();
+  await page.reload();
+  await page.waitForTimeout(6000); 
+  
+  await consultationsPage.findconsultation(testData.consultation.edit.title);
+  await consultationsPage.assertconsultations(testData.consultation.edit);
+  //duration not being updated correctly, test case will fail
+});
+
+test ('Update PayPal payment info on valid mail', async ({ page }) => {
+  const paymentPage = new PaymentPage(page);
+  await paymentPage.updatePaymentInfo(testData.payment.validPaypalEmail);
+});
+
+test ("Inbox - navigate and send message", async ({ page }) => {
+    const inbox = new InboxPage(page);
+    await inbox.navigateToInbox(testData.events.find_event_to_inbox.title);
+    const today = new Date().toLocaleDateString("en-GB"); 
+    const message = `Test inbox - ${today}`;
+    await inbox.sendMessage(message);
+});
+
+test ("Inbox - do not send empty message", async ({ page }) => {
+    const inbox = new InboxPage(page);
+    await inbox.navigateToInbox(testData.events.find_event_to_inbox.title);
+    await inbox.sendEmptyMessage();
+  });
+
+test ("Inbox - send attachment file", async ({ page }) => {
+    const inbox = new InboxPage(page);
+    await inbox.navigateToInbox(testData.events.find_event_to_inbox.title);
+    await inbox.sendAttachment("tests/fixtures/testfile.csv"); 
+  });
+
+
+
+});
