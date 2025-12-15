@@ -30,5 +30,13 @@ export const testData = {
 
   affiliate_email_tobeapproved: {
     email: "qa+affiliate@example.com",
-  }
+  },
+    stripe: {
+    email: 'test@mail.com',
+    cardNumber: "4242424242424242",
+    expDate: "12/30",
+    cvc: "123",
+    postal: "12345",
+    billingName :'Test'
+  },
 };

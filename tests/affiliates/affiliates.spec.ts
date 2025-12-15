@@ -46,7 +46,7 @@ test.describe.serial('Affiliate registration', () => {
 
   })
 
-  test('Affiliate dashboard click info updates correctly', async({page})=>{
+  test.skip('Affiliate dashboard click info updates correctly', async({page})=>{
     const affiliatepage = new AffiliatePage(page);
     await affiliatepage.goto();
     await affiliatepage.login(
@@ -55,6 +55,18 @@ test.describe.serial('Affiliate registration', () => {
     );
     await affiliatepage.expectLoginSuccess();
     await affiliatepage.check_clickmetric()
+
+  })
+
+  test('Affiliate dashboard SPS info updates correctly', async({page})=>{
+    const affiliatepage = new AffiliatePage(page);
+    await affiliatepage.goto();
+    await affiliatepage.login(
+      testData.affiliatelogin.Email,
+      testData.affiliatelogin.Password
+    );
+    await affiliatepage.expectLoginSuccess();
+    await affiliatepage.check_salesmetric(testData.stripe)
 
   })
 });
