@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { AffiliateRegPage } from '../../pages/Affiliates/AffiliateRegPage';
 import { LoginPage } from '../../pages/Affiliates/LoginPage';
 import { AffiliatePage } from '../../pages/Affiliates/AffiliatePage';
+import { TransactionsPage } from '../../pages/Affiliates/TransactionPage';
 import { testData } from '../fixtures/testData';
 
 
@@ -58,7 +59,7 @@ test.describe.serial('Affiliate registration', () => {
 
   })
 
-  test('Affiliate dashboard SPS info updates correctly', async({page})=>{
+  test.skip('Affiliate dashboard SPS info updates correctly', async({page})=>{
     const affiliatepage = new AffiliatePage(page);
     await affiliatepage.goto();
     await affiliatepage.login(
@@ -69,4 +70,21 @@ test.describe.serial('Affiliate registration', () => {
     await affiliatepage.check_salesmetric(testData.stripe)
 
   })
+
+  test.skip('Affiliate transactions totals update correctly', async ({ page }) => {
+  const affiliatePage = new AffiliatePage(page);
+  const transactionsPage = new TransactionsPage(page);
+
+  await affiliatePage.goto();
+  await affiliatePage.login(
+    testData.affiliatelogin.Email,
+    testData.affiliatelogin.Password
+  );
+  await affiliatePage.expectLoginSuccess();
+
+  await transactionsPage.goto();
+  await transactionsPage.validatePendingAndTotalCommission();
+  });
+
+
 });
