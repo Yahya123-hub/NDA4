@@ -31,6 +31,10 @@ export const testData = {
   affiliate_email_tobeapproved: {
     email: "qa+affiliate@example.com",
   },
+  
+  affiliate_email_payouttobeapproved: {
+    email: "qa+affiliate@example.com",
+  },
     stripe: {
     email: 'test@mail.com',
     cardNumber: "4242424242424242",

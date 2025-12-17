@@ -6,9 +6,9 @@ import { TransactionsPage } from '../../pages/Affiliates/TransactionPage';
 import { testData } from '../fixtures/testData';
 
 
-test.describe.serial('Affiliate registration', () => {
+test.describe('Affiliate registration', () => {
   
-  test.skip('User can sign up as an affiliate', async ({ page }) => {
+  test('User can sign up as an affiliate', async ({ page }) => {
     const affiliate = new AffiliateRegPage(page);
     await page.goto(testData.urls.signup);
 
@@ -35,7 +35,7 @@ test.describe.serial('Affiliate registration', () => {
 
   });
 
-  test.skip('Affiliate user gets approved from admin', async({page})=>{
+  test('Affiliate user gets approved from admin', async({page})=>{
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.login(
@@ -47,7 +47,7 @@ test.describe.serial('Affiliate registration', () => {
 
   })
 
-  test.skip('Affiliate dashboard click info updates correctly', async({page})=>{
+  test('Affiliate dashboard click info updates correctly', async({page})=>{
     const affiliatepage = new AffiliatePage(page);
     await affiliatepage.goto();
     await affiliatepage.login(
@@ -59,7 +59,7 @@ test.describe.serial('Affiliate registration', () => {
 
   })
 
-  test.skip('Affiliate dashboard SPS info updates correctly', async({page})=>{
+  test('Affiliate dashboard SPS info updates correctly', async({page})=>{
     const affiliatepage = new AffiliatePage(page);
     await affiliatepage.goto();
     await affiliatepage.login(
@@ -71,7 +71,7 @@ test.describe.serial('Affiliate registration', () => {
 
   })
 
-  test.skip('Affiliate transactions totals update correctly', async ({ page }) => {
+  test('Affiliate transactions totals update correctly', async ({ page }) => {
   const affiliatePage = new AffiliatePage(page);
   const transactionsPage = new TransactionsPage(page);
 
@@ -85,6 +85,17 @@ test.describe.serial('Affiliate registration', () => {
   await transactionsPage.goto();
   await transactionsPage.validatePendingAndTotalCommission();
   });
+  
+  test('Affiliate user gets payout approved from admin', async({page})=>{
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login(
+      testData.affiliatelogin.Email,
+      testData.affiliatelogin.Password
+    );
+    await loginPage.expectLoginSuccess();
+    await loginPage.approveaffiliate_payout(testData.affiliate_email_payouttobeapproved.email)
 
+  })
 
 });
